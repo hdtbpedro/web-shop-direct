@@ -13,7 +13,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
         </div>
         <CardTitle className="mt-2 text-lg">{product.name}</CardTitle>
-        <CardDescription>SKU: {product.sku}</CardDescription>
+        <CardDescription>ID: {product.id}</CardDescription>
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground flex-1">
         {product.description}

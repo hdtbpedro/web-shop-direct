@@ -15,13 +15,24 @@ const CartSheet = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
     for (const [sku, qty] of entries) {
       const p = products.find(pr => pr.sku === sku);
       if (p) {
-        lines.push(`• ${p.name} (SKU: ${p.sku}) — ${qty}x ${formatCurrency(p.price)} = ${formatCurrency(p.price * qty)}`);
+        lines.push(`• ${p.name} (ID: ${p.id}) — ${qty}x ${formatCurrency(p.price)} = ${formatCurrency(p.price * qty)}`);
       }
     }
     lines.push(`Total: ${formatCurrency(total)}`);
     const msg = encodeURIComponent(lines.join("\n"));
     const num = onlyDigits(whatsappNumber);
     return `https://wa.me/${num}?text=${msg}`;
+  };
+
+  const buildCartUrl = () => {
+    const segments = entries
+      .map(([sku, qty]) => {
+        const p = products.find((pr) => pr.sku === sku);
+        return p ? `${p.id}:${qty}` : null;
+      })
+      .filter(Boolean)
+      .join(",");
+    return `${window.location.origin}/carrinho/${segments}`;
   };
 
   return (
@@ -41,7 +52,7 @@ const CartSheet = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
                 <img src={p.imageUrl} alt={p.name} className="h-14 w-14 object-cover rounded" />
                 <div className="flex-1">
                   <div className="font-medium">{p.name}</div>
-                  <div className="text-xs text-muted-foreground">SKU: {p.sku}</div>
+                  <div className="text-xs text-muted-foreground">ID: {p.id}</div>
                   <div className="text-sm">{formatCurrency(p.price)} • Qtd: {qty}</div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -57,8 +68,11 @@ const CartSheet = ({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
           <span className="text-sm text-muted-foreground">Total</span>
           <span className="font-semibold">{formatCurrency(total)}</span>
         </div>
-        <SheetFooter className="mt-4 flex gap-2">
+  <SheetFooter className="mt-4 flex gap-2">
           <Button variant="outline" onClick={clear} disabled={entries.length === 0}>Limpar</Button>
+          <Button asChild variant="secondary" disabled={entries.length === 0}>
+            <a href={buildCartUrl()} target="_blank" rel="noreferrer">Gerar URL do Carrinho</a>
+          </Button>
           <Button asChild disabled={entries.length === 0 || !whatsappNumber}>
             <a href={whatsappNumber ? buildWhatsAppLink() : undefined} target="_blank" rel="noreferrer">
               Finalizar Compra no WhatsApp
