@@ -103,10 +103,51 @@ const ProductManager = ({ products, onAdd, onUpdate, onDelete, isSkuAvailable }:
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<Omit<Product, "id">>({ name: "", description: "", imageUrl: "", price: 0, sku: "" });
 
+  const fileToDataURL = (blob: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+  const processImageFile = async (file: File): Promise<string> => {
+    const type = file.type || "";
+    const isHeic = type === "image/heic" || type === "image/heif" || /\.heic$/i.test(file.name) || /\.heif$/i.test(file.name);
+    if (isHeic) {
+      try {
+        const mod = await import("heic2any");
+        const heic2any = (mod as any).default || (mod as any);
+        const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+        const blob = Array.isArray(converted) ? converted[0] : converted;
+        return await fileToDataURL(blob as Blob);
+      } catch (e) {
+        alert("Falha ao converter imagem HEIC. Tente PNG ou JPG.");
+        throw e;
+      }
+    }
+    return await fileToDataURL(file);
+  };
+
+  const onCreateImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const dataUrl = await processImageFile(f);
+    setCreating((v) => ({ ...v, imageUrl: dataUrl }));
+  };
+
+  const onEditImageChange = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const dataUrl = await processImageFile(f);
+    setEditing((v) => ({ ...v, imageUrl: dataUrl }));
+  };
+
   const submitAdd = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       if (!isSkuAvailable(creating.sku)) return alert("SKU já existe");
+      if (!creating.imageUrl) return alert("Envie uma imagem do produto");
       onAdd({ ...creating, price: Number(creating.price) });
       setCreating({ name: "", description: "", imageUrl: "", price: 0, sku: "" });
     } catch (err: any) {
@@ -147,15 +188,16 @@ const ProductManager = ({ products, onAdd, onUpdate, onDelete, isSkuAvailable }:
               <Input id="description" value={creating.description} onChange={e => setCreating(v => ({ ...v, description: e.target.value }))} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Preço (R$)</Label>
-              <Input id="price" type="number" step="0.01" value={creating.price} onChange={e => setCreating(v => ({ ...v, price: Number(e.target.value) }))} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="imageUrl">URL da Imagem</Label>
-              <Input id="imageUrl" value={creating.imageUrl} onChange={e => setCreating(v => ({ ...v, imageUrl: e.target.value }))} required />
+              <Label htmlFor="imageFile">Imagem (PNG, JPG ou HEIC)</Label>
+              <Input id="imageFile" type="file" accept="image/png,image/jpeg,image/heic,image/heif" onChange={onCreateImageChange} required />
+              {creating.imageUrl && (
+                <div className="mt-2">
+                  <img src={creating.imageUrl} alt="Prévia" className="h-24 w-24 object-cover rounded" />
+                </div>
+              )}
             </div>
             <div className="md:col-span-2 flex justify-end">
-              <Button type="submit">Adicionar</Button>
+              <Button type="submit" disabled={!creating.imageUrl}>Adicionar</Button>
             </div>
           </form>
         </CardContent>
@@ -180,7 +222,12 @@ const ProductManager = ({ products, onAdd, onUpdate, onDelete, isSkuAvailable }:
               {products.map(p => (
                 <TableRow key={p.id}>
                   <TableCell>
-                    <img src={p.imageUrl} alt={p.name} className="h-12 w-12 object-cover rounded" />
+                    <div className="flex items-center gap-2">
+                      <img src={p.imageUrl} alt={p.name} className="h-12 w-12 object-cover rounded" />
+                      {editingId === p.id && (
+                        <Input type="file" accept="image/png,image/jpeg,image/heic,image/heif" onChange={(e) => onEditImageChange(p.id, e)} />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {editingId === p.id ? (
