@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { useProducts } from "@/context/ProductsContext";
@@ -6,29 +6,36 @@ import { useProducts } from "@/context/ProductsContext";
 const CartFromUrl = () => {
   const { items } = useParams<{ items: string }>();
   const navigate = useNavigate();
-  const { clear, add } = useCart();
+  const { clear, add, setCartOpen } = useCart();
   const { products } = useProducts();
+  const hasProcessedUrl = useRef(false);
 
   useEffect(() => {
-    if (!items || products.length === 0) return;
+    if (!items || hasProcessedUrl.current) {
+      return;
+    }
+    
+    if (products.length === 0) {
+      return;
+    }
 
-    // Reset cart and rebuild from URL
+    hasProcessedUrl.current = true;
     clear();
 
     const parts = items.split(",");
     for (const part of parts) {
-      const [id, qtyStr] = part.split(":");
+      const [sku, qtyStr] = part.split(":");
       const qty = Math.max(1, Number(qtyStr || 1));
-      const product = products.find((p) => String(p.id) === id);
+      const product = products.find((p) => p.sku === sku);
       if (product) {
-        // Cart is keyed by SKU internally; map ID -> SKU here
         add(product.sku, qty);
       }
     }
 
-    // After applying, go back to home (catalog)
+    setCartOpen(true);
     navigate("/", { replace: true });
-  }, [items, products, clear, add, navigate]);
+
+  }, [items, products, clear, add, navigate, setCartOpen]);
 
   return null;
 };
