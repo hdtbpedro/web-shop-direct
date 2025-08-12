@@ -4,7 +4,7 @@ export type Product = {
   name: string;
   description: string;
   price: number; // in BRL
-  imageUrl: string;
+  imageUrls: string[]; // múltiplas imagens
 };
 
 export type CartItem = {

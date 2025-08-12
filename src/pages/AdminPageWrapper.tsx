@@ -1,15 +1,12 @@
 import React from "react";
 import Admin from "@/pages/Admin";
-import { ProductsProvider } from "@/context/ProductsContext";
-import { CartProvider } from "@/context/CartContext";
+import Layout from "@/components/Layout";
 
 const AdminPageWrapper = () => {
   return (
-    <ProductsProvider>
-      <CartProvider>
-        <Admin />
-      </CartProvider>
-    </ProductsProvider>
+    <Layout>
+      <Admin />
+    </Layout>
   );
 };
 

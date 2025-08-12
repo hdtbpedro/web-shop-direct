@@ -59,7 +59,7 @@ const buildWhatsAppLink = () => {
           if (!p) return null;
           return (
              <div key={sku} className="flex items-center gap-3 border rounded-md p-3">
-               <img src={p.imageUrl} alt={p.name} className="h-14 w-14 object-cover rounded shrink-0" />
+               <img src={p.imageUrls[0]} alt={p.name} className="h-14 w-14 object-cover rounded shrink-0" />
                <div className="flex-1">
                  <div className="font-medium">{p.name}</div>
                  <div className="text-xs text-muted-foreground">ID: {p.id}</div>

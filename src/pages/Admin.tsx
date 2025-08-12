@@ -7,72 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { X, Plus } from "lucide-react";
 import { Product } from "@/types";
 
 const Admin = () => {
   const { products, addProduct, updateProduct, deleteProduct, whatsappNumber, setWhatsAppNumber, isSkuAvailable } = useProducts();
-  const [logged, setLogged] = useState(false);
-
-  // Seed default credentials if none
-  useEffect(() => {
-    const creds = localStorage.getItem(STORAGE_KEYS.adminCredentials);
-    if (!creds) {
-      localStorage.setItem(STORAGE_KEYS.adminCredentials, JSON.stringify({ username: "admin", password: "admin123" }));
-    }
-    const session = localStorage.getItem(STORAGE_KEYS.adminSession);
-    setLogged(session === "true");
-  }, []);
-
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const username = String(data.get("username") || "");
-    const password = String(data.get("password") || "");
-    const creds = JSON.parse(localStorage.getItem(STORAGE_KEYS.adminCredentials) || "{}");
-    if (creds.username === username && creds.password === password) {
-      localStorage.setItem(STORAGE_KEYS.adminSession, "true");
-      setLogged(true);
-    } else {
-      alert("Credenciais inválidas");
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEYS.adminSession);
-    setLogged(false);
-  };
-
-  if (!logged) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>Acesso Administrativo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Usuário</Label>
-                <Input id="username" name="username" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input id="password" name="password" type="password" required />
-              </div>
-              <Button className="w-full" type="submit">Entrar</Button>
-              <p className="text-xs text-muted-foreground">Padrão: admin / admin123</p>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen container mx-auto py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Painel Administrativo</h1>
-        <Button variant="outline" onClick={logout}>Sair</Button>
+        <h1 className="text-2xl font-bold">Gerenciar Produtos</h1>
       </div>
 
       <Tabs defaultValue="produtos">
@@ -99,9 +44,9 @@ const ProductManager = ({ products, onAdd, onUpdate, onDelete, isSkuAvailable }:
   onDelete: (id: string) => void;
   isSkuAvailable: (sku: string, excludeId?: string) => boolean;
 }) => {
-  const [creating, setCreating] = useState<Omit<Product, "id">>({ name: "", description: "", imageUrl: "", price: 0, sku: "" });
+  const [creating, setCreating] = useState<Omit<Product, "id">>({ name: "", description: "", imageUrls: [], price: 0, sku: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Omit<Product, "id">>({ name: "", description: "", imageUrl: "", price: 0, sku: "" });
+  const [editing, setEditing] = useState<Omit<Product, "id">>({ name: "", description: "", imageUrls: [], price: 0, sku: "" });
 
   const fileToDataURL = (blob: Blob): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -129,27 +74,55 @@ const ProductManager = ({ products, onAdd, onUpdate, onDelete, isSkuAvailable }:
     return await fileToDataURL(file);
   };
 
-  const onCreateImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const dataUrl = await processImageFile(f);
-    setCreating((v) => ({ ...v, imageUrl: dataUrl }));
+  const onCreateImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    const dataUrls: string[] = [];
+    for (const file of files) {
+      try {
+        const dataUrl = await processImageFile(file);
+        dataUrls.push(dataUrl);
+      } catch (error) {
+        console.error("Erro ao processar imagem:", error);
+      }
+    }
+    
+    setCreating((v) => ({ ...v, imageUrls: [...v.imageUrls, ...dataUrls] }));
   };
 
-  const onEditImageChange = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const dataUrl = await processImageFile(f);
-    setEditing((v) => ({ ...v, imageUrl: dataUrl }));
+  const onEditImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    const dataUrls: string[] = [];
+    for (const file of files) {
+      try {
+        const dataUrl = await processImageFile(file);
+        dataUrls.push(dataUrl);
+      } catch (error) {
+        console.error("Erro ao processar imagem:", error);
+      }
+    }
+    
+    setEditing((v) => ({ ...v, imageUrls: [...v.imageUrls, ...dataUrls] }));
+  };
+
+  const removeCreateImage = (index: number) => {
+    setCreating((v) => ({ ...v, imageUrls: v.imageUrls.filter((_, i) => i !== index) }));
+  };
+
+  const removeEditImage = (index: number) => {
+    setEditing((v) => ({ ...v, imageUrls: v.imageUrls.filter((_, i) => i !== index) }));
   };
 
   const submitAdd = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       if (!isSkuAvailable(creating.sku)) return alert("SKU já existe");
-      if (!creating.imageUrl) return alert("Envie uma imagem do produto");
+      if (creating.imageUrls.length === 0) return alert("Envie pelo menos uma imagem do produto");
       onAdd({ ...creating, price: Number(creating.price) });
-      setCreating({ name: "", description: "", imageUrl: "", price: 0, sku: "" });
+      setCreating({ name: "", description: "", imageUrls: [], price: 0, sku: "" });
     } catch (err: any) {
       alert(err?.message || "Erro ao adicionar");
     }
@@ -157,7 +130,7 @@ const ProductManager = ({ products, onAdd, onUpdate, onDelete, isSkuAvailable }:
 
   const startEdit = (p: Product) => {
     setEditingId(p.id);
-    setEditing({ name: p.name, description: p.description, imageUrl: p.imageUrl, price: p.price, sku: p.sku });
+    setEditing({ name: p.name, description: p.description, imageUrls: [...p.imageUrls], price: p.price, sku: p.sku });
   };
 
   const saveEdit = () => {
@@ -188,16 +161,35 @@ const ProductManager = ({ products, onAdd, onUpdate, onDelete, isSkuAvailable }:
               <Input id="description" value={creating.description} onChange={e => setCreating(v => ({ ...v, description: e.target.value }))} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="imageFile">Imagem (PNG, JPG ou HEIC)</Label>
-              <Input id="imageFile" type="file" accept="image/png,image/jpeg,image/heic,image/heif" onChange={onCreateImageChange} required />
-              {creating.imageUrl && (
+              <Label htmlFor="imageFiles">Imagens (PNG, JPG ou HEIC) - Múltiplas seleções permitidas</Label>
+              <Input id="imageFiles" type="file" accept="image/png,image/jpeg,image/heic,image/heif" multiple onChange={onCreateImagesChange} />
+              {creating.imageUrls.length > 0 && (
                 <div className="mt-2">
-                  <img src={creating.imageUrl} alt="Prévia" className="h-24 w-24 object-cover rounded" />
+                  <div className="grid grid-cols-4 gap-2">
+                    {creating.imageUrls.map((imageUrl, index) => (
+                      <div key={index} className="relative">
+                        <img src={imageUrl} alt={`Prévia ${index + 1}`} className="h-24 w-24 object-cover rounded" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                          onClick={() => removeCreateImage(index)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Preço (R$)</Label>
+              <Input id="price" type="number" step="0.01" value={creating.price} onChange={e => setCreating(v => ({ ...v, price: Number(e.target.value) }))} required />
+            </div>
             <div className="md:col-span-2 flex justify-end">
-              <Button type="submit" disabled={!creating.imageUrl}>Adicionar</Button>
+              <Button type="submit" disabled={creating.imageUrls.length === 0}>Adicionar</Button>
             </div>
           </form>
         </CardContent>
@@ -222,8 +214,158 @@ const ProductManager = ({ products, onAdd, onUpdate, onDelete, isSkuAvailable }:
               {products.map(p => (
                 <TableRow key={p.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <img src={p.imageUrl} alt={p.name} className="h-12 w-12 object-cover rounded" />
+                    <div className="flex items-center gap-2 flex-col">
+                      {editingId === p.id ? (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-3 gap-1">
+                            {editing.imageUrls.map((imageUrl, index) => (
+                              <div key={index} className="relative">
+                                <img src={imageUrl} alt={`${p.name} ${index + 1}`} className="h-12 w-12 object-cover rounded" />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0"
+                                  onClick={() => removeEditImage(index)}
+                                >
+                                  <X className="h-2 w-2" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                          <Input type="file" accept="image/png,image/jpeg,image/heic,image/heif" multiple onChange={onEditImagesChange} />
+                        </div>
+                      ) : (
+                        p.imageUrls.length === 1 ? (
+                          <img src={p.imageUrls[0]} alt={p.name} className="h-12 w-12 object-cover rounded" />
+                        ) : (
+                          <div className="w-12 h-12">
+                            <Carousel className="w-full h-full">
+                              <CarouselContent>
+                                {p.imageUrls.map((imageUrl, index) => (
+                                  <CarouselItem key={index}>
+                                    <img src={imageUrl} alt={`${p.name} - ${index + 1}`} className="h-12 w-12 object-cover rounded" />
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                            </Carousel>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {editingId === p.id ? (
+                      <Input value={editing.name} onChange={e => setEditing(v => ({ ...v, name: e.target.value }))} />
+                    ) : (
+                      p.name
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === p.id ? (
+                      <Input value={editing.sku} onChange={e => setEditing(v => ({ ...v, sku: e.target.value }))} />
+                    ) : (
+                      p.sku
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === p.id ? (
+                      <Input type="number" step="0.01" value={editing.price} onChange={e => setEditing(v => ({ ...v, price: Number(e.target.value) }))} />
+                    ) : (
+                      new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(p.price)
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    {editingId === p.id ? (
+                      <>
+                        <Button size="sm" onClick={saveEdit}>Salvar</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>Cancelar</Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="secondary" onClick={() => startEdit(p)}>Editar</Button>
+                        <Button size="sm" variant="destructive" onClick={() => onDelete(p.id)}>Excluir</Button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const ConfigManager = ({ whatsappNumber, setWhatsAppNumber }:{ whatsappNumber: string; setWhatsAppNumber: (v: string) => void }) => {
+  const [num, setNum] = useState(whatsappNumber);
+
+  const save = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setWhatsAppNumber(num);
+    alert("Número de WhatsApp salvo");
+  };
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>WhatsApp</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="wa">Número (somente dígitos, c/ DDI+DDD. Ex: 5511999999999)</Label>
+            <Input id="wa" value={num} onChange={e => setNum(onlyDigits(e.target.value))} placeholder="5511999999999" />
+          </div>
+          <div className="md:col-span-2 flex justify-end">
+            <Button type="submit">Salvar</Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+};
+
+const CredentialsManager = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    const creds = JSON.parse(localStorage.getItem(STORAGE_KEYS.adminCredentials) || "{}");
+    setUsername(creds.username || "admin");
+    setPassword(creds.password || "admin123");
+  }, []);
+
+  const save = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    localStorage.setItem(STORAGE_KEYS.adminCredentials, JSON.stringify({ username, password }));
+    alert("Credenciais atualizadas");
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Credenciais de Acesso (Opcional)</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={save} className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="user">Usuário</Label>
+            <Input id="user" value={username} onChange={e => setUsername(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pass">Senha</Label>
+            <Input id="pass" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+          </div>
+          <div className="md:col-span-2 flex justify-end">
+            <Button type="submit">Salvar</Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+};
                       {editingId === p.id && (
                         <Input type="file" accept="image/png,image/jpeg,image/heic,image/heif" onChange={(e) => onEditImageChange(p.id, e)} />
                       )}

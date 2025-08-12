@@ -21,7 +21,7 @@ const seedProducts: Product[] = [
     name: "Camiseta Nebula",
     description: "Tecido premium com estampa galáctica.",
     price: 129.9,
-    imageUrl: "https://images.unsplash.com/photo-1548883354-7622d03aca29?q=80&w=1200&auto=format&fit=crop",
+    imageUrls: ["https://images.unsplash.com/photo-1548883354-7622d03aca29?q=80&w=1200&auto=format&fit=crop"],
   },
   {
     id: crypto.randomUUID(),
@@ -29,7 +29,7 @@ const seedProducts: Product[] = [
     name: "Tênis Aurora",
     description: "Conforto máximo com visual futurista.",
     price: 399.0,
-    imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
+    imageUrls: ["https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop"],
   },
   {
     id: crypto.randomUUID(),
@@ -37,7 +37,7 @@ const seedProducts: Product[] = [
     name: "Mochila Orion",
     description: "Resistente e espaçosa para o dia a dia.",
     price: 249.5,
-    imageUrl: "https://images.unsplash.com/photo-1520256862855-398228c41684?q=80&w=1200&auto=format&fit=crop",
+    imageUrls: ["https://images.unsplash.com/photo-1520256862855-398228c41684?q=80&w=1200&auto=format&fit=crop"],
   },
   {
     id: crypto.randomUUID(),
@@ -45,7 +45,7 @@ const seedProducts: Product[] = [
     name: "Relógio Cosmos",
     description: "Design minimalista com precisão.",
     price: 549.9,
-    imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop",
+    imageUrls: ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1200&auto=format&fit=crop"],
   },
   {
     id: crypto.randomUUID(),
@@ -53,7 +53,7 @@ const seedProducts: Product[] = [
     name: "Fone Pulsar",
     description: "Som imersivo e cancelamento de ruído.",
     price: 699.0,
-    imageUrl: "https://images.unsplash.com/photo-1518441902113-c1d3f4f2f1ff?q=80&w=1200&auto=format&fit=crop",
+    imageUrls: ["https://images.unsplash.com/photo-1518441902113-c1d3f4f2f1ff?q=80&w=1200&auto=format&fit=crop"],
   },
   {
     id: crypto.randomUUID(),
@@ -61,7 +61,7 @@ const seedProducts: Product[] = [
     name: "Jaqueta Nova",
     description: "Impermeável com corte contemporâneo.",
     price: 459.0,
-    imageUrl: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?q=80&w=1200&auto=format&fit=crop",
+    imageUrls: ["https://images.unsplash.com/photo-1473966968600-fa801b869a1a?q=80&w=1200&auto=format&fit=crop"],
   },
 ];
 
