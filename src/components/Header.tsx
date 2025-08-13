@@ -15,7 +15,13 @@ const Header = () => {
         </Link>
         <nav className="flex items-center gap-4">
           
-                  
+          <Link
+            to="/admin"
+            className="inline-flex items-center justify-center rounded-md px-3 py-2 border border-input hover:bg-accent/40 transition-colors"
+          >
+            <Settings className="h-5 w-5" />
+          </Link>
+          
           <button
             aria-label="Abrir carrinho"
             className="relative inline-flex items-center justify-center rounded-md px-3 py-2 border border-input hover:bg-accent/40 transition-colors"
