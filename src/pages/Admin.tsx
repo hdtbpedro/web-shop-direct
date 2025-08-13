@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import LoginForm from '@/components/LoginForm';
 import { useProducts } from '../context/ProductsContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -7,9 +9,11 @@ import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Trash2, Edit, Plus, X, Settings } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { Product } from '../types';
 
 export default function Admin() {
+  const { isAuthenticated, logout } = useAuth();
   const { products, addProduct, updateProduct, deleteProduct, whatsappNumber, setWhatsAppNumber } = useProducts();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
@@ -20,6 +24,11 @@ export default function Admin() {
     imageUrls: [] as string[]
   });
   const [tempWhatsapp, setTempWhatsapp] = useState(whatsappNumber);
+
+  // Se não estiver autenticado, mostrar tela de login
+  if (!isAuthenticated) {
+    return <LoginForm />;
+  }
 
   const resetForm = () => {
     setFormData({
@@ -108,9 +117,15 @@ export default function Admin() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
         <Settings className="w-6 h-6" />
         <h1 className="text-3xl font-bold">Painel Administrativo</h1>
+        </div>
+        <Button variant="outline" onClick={logout} className="flex items-center gap-2">
+          <LogOut className="w-4 h-4" />
+          Sair
+        </Button>
       </div>
 
       <Tabs defaultValue="products" className="w-full">
@@ -274,7 +289,17 @@ export default function Admin() {
         </TabsContent>
 
         <TabsContent value="config">
-          <Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Alterar Credenciais de Acesso</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChangeCredentialsForm />
+              </CardContent>
+            </Card>
+            
+            <Card>
             <CardHeader>
               <CardTitle>Configurações do WhatsApp</CardTitle>
             </CardHeader>
@@ -296,8 +321,90 @@ export default function Admin() {
               </Button>
             </CardContent>
           </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
+const ChangeCredentialsForm = () => {
+  const { setCredentials } = useAuth();
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newUsername || !newPassword || !confirmPassword) {
+      setMessage('Por favor, preencha todos os campos.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setMessage('As senhas não coincidem.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setMessage('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    setCredentials(newUsername, newPassword);
+    setMessage('Credenciais alteradas com sucesso!');
+    setNewUsername('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="newUsername">Novo Usuário</Label>
+        <Input
+          id="newUsername"
+          value={newUsername}
+          onChange={(e) => setNewUsername(e.target.value)}
+          placeholder="Digite o novo usuário"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="newPassword">Nova Senha</Label>
+        <Input
+          id="newPassword"
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="Digite a nova senha"
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirme a nova senha"
+        />
+      </div>
+      
+      {message && (
+        <div className={`text-sm p-2 rounded ${
+          message.includes('sucesso') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message}
+        </div>
+      )}
+      
+      <Button type="submit">
+        Alterar Credenciais
+      </Button>
+    </form>
+  );
+};
