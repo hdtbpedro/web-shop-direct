@@ -1,5 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { ProductsContext } from '../context/ProductsContext';
+import React, { useState } from 'react';
+import { useProducts } from '../context/ProductsContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -10,7 +10,7 @@ import { Trash2, Edit, Plus, X, Settings } from 'lucide-react';
 import { Product } from '../types';
 
 export default function Admin() {
-  const { products, addProduct, updateProduct, deleteProduct, whatsappNumber, setWhatsappNumber } = useContext(ProductsContext);
+  const { products, addProduct, updateProduct, deleteProduct, whatsappNumber, setWhatsAppNumber } = useProducts();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     name: '',
