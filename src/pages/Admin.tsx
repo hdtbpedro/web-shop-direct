@@ -111,7 +111,7 @@ export default function Admin() {
   };
 
   const saveWhatsappConfig = () => {
-    setWhatsappNumber(tempWhatsapp);
+    setWhatsAppNumber(tempWhatsapp);
     alert('Configuração do WhatsApp salva!');
   };
 
